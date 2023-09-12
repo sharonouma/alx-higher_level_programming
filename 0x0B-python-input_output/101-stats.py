@@ -1,51 +1,52 @@
 #!/usr/bin/python3
-"""
-Prints the metrics including total file size and number of lines
-by status code
-"""
 import sys
 
 
-def print_metrics(total_size, status_codes):
-    """
-    Args:
-        total_size (int): The total file size.
-        status_codes (dict): A dictionary containing the count of each
-        status code.
+def print_info():
+    print('File size: {:d}'.format(file_size))
 
-    Returns:
-        None.
-
-    Raises:
-        None.
-
-    """
-    print("File size: {}".format(total_size))
-    sorted_status_codes = sorted(status_codes.keys())
-    for code in sorted_status_codes:
-        print("{}: {}".format(code, status_codes[code]))
+    for scode, code_times in sorted(status_codes.items()):
+        if code_times > 0:
+            print('{}: {:d}'.format(scode, code_times))
 
 
-total_size = 0
-status_codes = {}
+status_codes = {
+    '200': 0,
+    '301': 0,
+    '400': 0,
+    '401': 0,
+    '403': 0,
+    '404': 0,
+    '405': 0,
+    '500': 0
+}
 
+lc = 0
+file_size = 0
 
 try:
-    for i, line in enumerate(sys.stdin, 1):
+    for line in sys.stdin:
+        if lc != 0 and lc % 10 == 0:
+            print_info()
+
+        pieces = line.split()
+
         try:
-            ip, _, _, _, status, size = line.split()[0], line.split()[8],\
-                    line.split()[10]
-            total_size += int(size)
+            status = int(pieces[-2])
 
-            if status in status_codes:
-                status_codes[status] += 1
-            else:
-                status_codes[status] = 1
-
-            if i % 10 == 0:
-                print_metrics(total_size, status_codes)
-        except (IndexError, ValueError):
+            if str(status) in status_codes.keys():
+                status_codes[str(status)] += 1
+        except:
             pass
 
+        try:
+            file_size += int(pieces[-1])
+        except:
+            pass
+
+        lc += 1
+
+    print_info()
 except KeyboardInterrupt:
-    print_metrics(total_size, status_codes)
+    print_info()
+    raise
